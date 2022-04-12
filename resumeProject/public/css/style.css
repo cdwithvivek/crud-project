@@ -1,0 +1,36 @@
+.st-font {
+    font-family: 'Satisfy', cursive;
+}
+
+.active{
+    background-color: orange;
+    border: 1px solid blue;
+    border-radius: 2px;
+} 
+
+html,body{
+    height: 100%;
+}
+
+.container-fluid {
+    min-height: 100%;
+}
+
+.i-color {
+    color : chartreuse;
+}
+
+.ss-color {
+    color: silver;
+}
+
+a.nav-link:hover {
+    color : black;
+    background-color: #e9cd79;
+}
+
+a.nav-link.active {
+    color : black;
+    background-color: #ffc107;
+    font-weight: bold;
+}

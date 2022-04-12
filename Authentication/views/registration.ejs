@@ -1,0 +1,26 @@
+<%- include('./partials/header.ejs', {title : 'Registration Page'}) %>
+<%- include('./partials/navbar.ejs', {title : 'Registration Page'}) %> 
+
+<div class="container">
+    <div class="row mt-5">
+        <h1>Registration page</h1>
+        <hr>
+        <form method="post">
+            <div class="form-group mb-2">
+              <label for="Name">Name</label>
+              <input type="text" class="form-control" id="name" placeholder="name" name="name">
+            </div>
+            <div class="form-group mb-2">
+              <label for="Email">Email</label>
+              <input type="text" class="form-control" id="email" placeholder="email" name="email">
+            </div>
+            <div class="form-group mb-2">
+                <label for="Password">Password</label>
+                <input type="password" class="form-control" id="password" placeholder="password" name="password">
+            </div>
+            <button class="btn btn-primary" type="submit">Register</button>
+          </form>
+    </div>
+</div>
+
+<%- include('./partials/footer.ejs') %>

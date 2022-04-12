@@ -1,0 +1,6 @@
+const uri = "mongodb+srv://alex:<password>@cluster0.irgzg.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+
+
+
+

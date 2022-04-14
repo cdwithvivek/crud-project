@@ -1,0 +1,49 @@
+/* navbar css */
+
+#navbarNav{
+    justify-content: end;
+}
+.navbarColor {
+    background-color:  #e6e6e6;
+}
+#nav-img {
+    width: 80px;
+    height: auto;
+}
+
+/* sign up */
+
+
+.my-card{
+    -webkit-box-shadow: 6px 3px 10px -6px rgba(0,0,0,0.75);
+    -moz-box-shadow: 6px 3px 10px -6px rgba(0,0,0,0.75);
+    box-shadow: 6px 3px 10px -6px rgba(0,0,0,0.75);
+    
+}
+
+.signup-figure {
+    display: flex;
+    flex-direction: column;
+}
+
+.signup-image-link {
+    display: block;
+    margin: 30px auto;
+}
+
+/* login page */
+.divider:after,
+.divider:before {
+content: "";
+flex: 1;
+height: 1px;
+background: #eee;
+}
+.h-custom {
+height: calc(100% - 73px);
+}
+@media (max-width: 450px) {
+.h-custom {
+height: 100%;
+}
+}

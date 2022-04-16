@@ -1,73 +1,167 @@
-import UserModel from "../models/User.js";
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-
+import UserModel from "../models/User.js"
+import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
 class UserController {
-    static userRegistration = async (req,res) => {
-        const {name,email,password,password_confirmation,tc} = req.body
-        // collection mai data find
-        const existedUser = await UserModel.findOne({email})
-        if(existedUser){
-            res.send({"status" : "failed", "message" : "Email already exists" })
-        }else{
-            //validation before registration
-            if(name && email && password && password_confirmation && tc){
-                //validating email and password
-                if(password == password_confirmation){
-                    try{
-                        //hashing
-                        const salt = await bcrypt.genSalt(10)
-                        const hashPassword = await bcrypt.hash(password,salt)
-                        //sending data to database
-                        const doc = new UserModel({name,email,password : hashPassword ,tc})
-                        await doc.save()
-                        res.send({name,email,password})
-                    
-                    }catch(e){
-                        res.send({"error": e})
-                    }
-                }else{
-                    res.send({"status" : "failed", "message" : "cannot conform password , not match" })
-                }
-                
-                
-                
-            }else{
-                res.send({"status" : "failed", "message" : "All fields are required" })
-            }
-        }
+  //registratoin starts
+  static userRegistration = async (req, res) => {
+    try {
+      const { name, email, password, password_conf, tc } = req.body
+      const user = await UserModel.findOne({ email })
+      // checking all filled entered or not
+      if (!name || !password || !password_conf || !tc || !email) {
+        throw new Error("All Fields are Required!")
+      } // checking existed email
+      else if (user) {
+        throw new Error("User already exists!")
+      } // checking the password
+      else if (password !== password_conf) {
+        throw new Error("Password don't Match")
+      } // finally inserting into database
+      else {
+        const doc = new UserModel({ name, email, password, tc })
+        const saved_user = await doc.save()
+        // creating jwt token starts
+        const token = jwt.sign(
+          { userID: saved_user._id },
+          process.env.SECRET_KEY,
+          { expiresIn: "5d" }
+        )
+        //created jwt token ends
+        /*
+            use -> client kai pass hai yai token wo cookies,session,localStorage etc
+            mai rakh sakta hai aur decode karani pai user id return hogai jo ki data lanai mai
+             helpful hoga aur jab tak token hai wo authenticated user hai
+          🔥🔥🔥🔥🔥              
+        */
+
+        res.status(202).send({
+          status: "success",
+          msg: "Data Inserted Successfully",
+          token,
+        })
+      }
+    } catch (e) {
+      res.status(400).send({ status: "failed", msg: e.message })
     }
+  }
+  //registration ends
 
-    // user login
+  //login starts
+  static userLogin = async (req, res) => {
+    try {
+      const { email, password } = req.body
+      const user = await UserModel.findOne({ email })
 
-    static userLogin = async (req,res) => {
-        try{
-            const {email,password} = req.body
-            if(email && password){
-                const user = await UserModel.findOne({email})
-                console.log(user)
-                if(user){
-                    // decrypt password
-                    const isMatch = await decrypt.compare(password,user.password)
-                    
-                    if(isMatch){
-                        res.send({"status" : "success", "message" : "Logged In" }) 
-                    }else{
-                        res.send({"status" : "failed", "message" : "Email or password is wrong" }) 
-                    }
-                }else{
-                   res.send({"status" : "failed", "message" : "Not Register User" }) 
-                }
-                
-
-            }else{
-                res.send({"status" : "failed", "message" : "All fields are required" })
-            }
-        }catch(e){
-                res.send({"status" : "failed", "message" :"unable to login" })
+      //checking all fields
+      if (!email || !password) {
+        throw new Error("All fields are required!")
+      } //if user exists or not
+      else if (!user) {
+        throw new Error("Wrong credentials!")
+      } // finally matching the password
+      else {
+        // decrypting the password
+        const isMatch = await bcrypt.compare(password, user.password)
+        if (!isMatch) {
+          throw new Error("Wrong credentials!")
+        } else {
+          // creating jwt token starts
+          const token = jwt.sign({ userID: user._id }, process.env.SECRET_KEY, {
+            expiresIn: "5d",
+          })
+          //created jwt token ends
+          res
+            .status(200)
+            .send({ status: "success", msg: "Logged in successfully!", token })
         }
+      }
+    } catch (e) {
+      res.status(400).send({ status: "failed", msg: e.message })
     }
+  }
+  //login ends
+
+  //change password start
+  //login karnai kai baad hi change password feature milega 🍾🍾🍾
+  static changeUserPassword = async (req, res) => {
+    try {
+      const { password, password_conf } = req.body
+      if (!password || !password_conf) {
+        throw new Error("All fields are required")
+      } else if (password !== password_conf) {
+        throw new Error("Both password don't Match")
+      } else {
+        const newHashedPassword = await bcrypt.hash(password, 12)
+        // console.log(newHashedPassword)
+        // console.log(req.user._id)
+        await UserModel.findByIdAndUpdate(req.user._id, {
+          password: newHashedPassword,
+        })
+        res
+          .status(202)
+          .send({ status: "success", msg: "Password is changed successfully!" })
+      }
+    } catch (e) {
+      res.status(400).send({ status: "failed", msg: e.message })
+    }
+  }
+  //change password end
+
+  //logged user detail start
+  static loggedUserDetails = async (req, res) => {
+    res.send(req.user)
+  }
+  //logged user detail end
+
+  //password reset
+  /*
+    email dena hoga and then create hoga password
+  */
+  //public route mai hai
+  static sendUserPasswordResetEmail = async (req, res) => {
+    //user email send kariga
+    // req.body mai hai email
+    const { email } = req.body
+    try {
+      if (!email) {
+        throw new Error("Email is required")
+      } else {
+        //mathcing email
+        const user = await UserModel.findOne({ email })
+        if (!user) {
+          throw new Error("Not a registerd email")
+        } else {
+          const secret = user._id + process.SECRET_KEY
+          const token = await jwt.sign({ userID: user._id }, secret, {
+            expiresIn: "15m",
+          })
+          //front-end link
+          const link = `http://localhost:3000/api/user/reset/${user._id}/${token}`
+          console.log(link)
+          res
+            .status(200)
+            .send({ status: "failed", msg: "email send plz check you mail" })
+        }
+      }
+    } catch (e) {
+      res.status(400).send({ status: "failed", msg: e.message })
+    }
+  }
+
+  // passwordReset start
+  static userPasswordReset = async (req, res) => {
+    // form
+    const { password, password_conf } = req.body
+    // we need the link data and tokens using params
+    const { id, token } = req.params
+    console.log(id, token)
+    const user = await UserModel.findById(id)
+    const new_secret = user._id + process.env.SECRET_KEY
+    try {
+      jwt.verify(token, new_secret)
+    } catch (e) {}
+  }
+  // passwordRest End
 }
-
 
 export default UserController

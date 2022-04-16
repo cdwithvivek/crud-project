@@ -1,7 +1,57 @@
-import React from "react";
+import React, { useState } from "react";
 import navImage from "../images/reg_img.jpg";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 const SignUp = () => {
+  const [user, setUser] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    work: "",
+    password: "",
+    cpassword: "",
+  });
+
+  //navigation
+  let navigate = useNavigate();
+
+  // send user data to database
+  let name, value;
+  const handleInputs = (e) => {
+    // console.log(e.target.name);
+    name = e.target.name;
+    value = e.target.value;
+    setUser({ ...user, [name]: value });
+  };
+
+  const postData = async (e) => {
+    try {
+      e.preventDefault();
+      const { name, email, phone, work, password, cpassword } = user;
+      const res = await fetch("http://localhost:8000/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, phone, work, password, cpassword }),
+      });
+      const data = await res;
+      const json = data.json();
+      console.log(json);
+      console.log(res.status, data);
+      if (!data || data.status >= 300) {
+        window.alert("Invalid Registeration");
+        console.log("invalid register");
+        navigate("/SignUp");
+      } else {
+        window.alert("sucessfully register");
+        console.log("successfully register");
+        navigate("/Login");
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   return (
     <section className="vh-100 pt-3" style={{ backgroundColor: "#eee" }}>
       <div className="container h-100">
@@ -15,7 +65,7 @@ const SignUp = () => {
                       Sign up
                     </p>
 
-                    <form className="mx-1 mx-md-4">
+                    <form method="POST" className="mx-1 mx-md-4">
                       <div className="d-flex flex-row align-items-center mb-4">
                         <i className="fas fa-user fa-lg me-3 fa-fw"></i>
                         <div className="form-outline flex-fill mb-0">
@@ -26,6 +76,8 @@ const SignUp = () => {
                             placeholder="Enter your name"
                             autoComplete="off"
                             name="name"
+                            value={user.name}
+                            onChange={handleInputs}
                           />
                         </div>
                       </div>
@@ -40,6 +92,8 @@ const SignUp = () => {
                             placeholder="Enter you email"
                             autoComplete="off"
                             name="email"
+                            value={user.email}
+                            onChange={handleInputs}
                           />
                         </div>
                       </div>
@@ -53,6 +107,8 @@ const SignUp = () => {
                             placeholder="Enter your Mobile Number"
                             autoComplete="off"
                             name="phone"
+                            value={user.phone}
+                            onChange={handleInputs}
                           />
                         </div>
                       </div>
@@ -66,6 +122,8 @@ const SignUp = () => {
                             placeholder="Enter your Profession"
                             autoComplete="off"
                             name="work"
+                            value={user.work}
+                            onChange={handleInputs}
                           />
                         </div>
                       </div>
@@ -80,6 +138,8 @@ const SignUp = () => {
                             placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;"
                             autoComplete="off"
                             name="password"
+                            value={user.password}
+                            onChange={handleInputs}
                           />
                         </div>
                       </div>
@@ -94,6 +154,8 @@ const SignUp = () => {
                             placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;"
                             autoComplete="off"
                             name="cpassword"
+                            value={user.cpassword}
+                            onChange={handleInputs}
                           />
                         </div>
                       </div>
@@ -102,6 +164,7 @@ const SignUp = () => {
                         <button
                           type="submit"
                           className="btn btn-primary btn-lg"
+                          onClick={postData}
                         >
                           Register
                         </button>

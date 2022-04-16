@@ -1,12 +1,37 @@
-import React from "react";
+import React, { useState } from "react";
 import logo from "../images/sign_up.webp";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 const mystyle = {
   paddingLeft: "2.5rem",
   paddingRight: "2.5rem",
 };
 
 const Login = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigation = useNavigate();
+  const loginUser = async (e) => {
+    e.preventDefault();
+    const res = fetch("/signin", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await res;
+    const json = await data.json();
+    console.log(json);
+    if (data.status >= 300 || !data) {
+      window.alert("invalid");
+      navigation("/login");
+    } else {
+      window.alert("login success");
+      navigation("/");
+    }
+  };
+
   return (
     <section className="vh-100">
       <div className="container-fluid h-custom">
@@ -15,7 +40,7 @@ const Login = () => {
             <img src={logo} className="img-fluid" alt="Sampleimage" />
           </div>
           <div className="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
-            <form>
+            <form method="POST">
               <div className="d-flex flex-row align-items-center justify-content-center justify-content-lg-start">
                 <p className="lead fw-normal mb-0 me-3">Sign in with</p>
                 <button
@@ -54,6 +79,10 @@ const Login = () => {
                     placeholder="Enter you email"
                     autoComplete="off"
                     name="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                    }}
                   />
                 </div>
               </div>
@@ -68,6 +97,8 @@ const Login = () => {
                     placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;"
                     autoComplete="off"
                     name="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
               </div>
@@ -80,11 +111,11 @@ const Login = () => {
                     value=""
                     id="form2Example3"
                   />
-                  <label className="form-check-label" for="form2Example3">
+                  <label className="form-check-label" htmlFor="form2Example3">
                     Remember me
                   </label>
                 </div>
-                <a href="#!" className="text-body">
+                <a href="/" className="text-body">
                   Forgot password?
                 </a>
               </div>
@@ -94,6 +125,7 @@ const Login = () => {
                   type="button"
                   className="btn btn-primary btn-lg"
                   style={mystyle}
+                  onClick={loginUser}
                 >
                   Login
                 </button>

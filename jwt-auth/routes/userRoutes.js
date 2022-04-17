@@ -10,6 +10,7 @@ userRoutes.post(
   "/send-reset-password-email",
   UserController.sendUserPasswordResetEmail
 )
+userRoutes.post("/reset-password/:id/:token", UserController.userPasswordReset)
 //Protected Routed
 userRoutes.post(
   "/changepassword",

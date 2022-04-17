@@ -1,6 +1,7 @@
 import UserModel from "../models/User.js"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
+import transporter from "../config/emailConfig.js"
 class UserController {
   //registratoin starts
   static userRegistration = async (req, res) => {
@@ -131,12 +132,21 @@ class UserController {
         if (!user) {
           throw new Error("Not a registerd email")
         } else {
-          const secret = user._id + process.SECRET_KEY
+          const secret = user._id + process.env.SECRET_KEY
+
           const token = await jwt.sign({ userID: user._id }, secret, {
             expiresIn: "15m",
           })
           //front-end link
-          const link = `http://localhost:3000/api/user/reset/${user._id}/${token}`
+          const link = `http://localhost:8000/api/user/reset-password/${user._id}/${token}`
+          //sending this link to node mailer
+          let info = await transporter.sendMail({
+            from: process.env.EMAIL_FROM,
+            to: user.email,
+            subject: "geekshop - Password Reset Link",
+            html: `<a href=${link}>Click here </a> to Reset Your Password`,
+            text: "hello",
+          })
           console.log(link)
           res
             .status(200)
@@ -153,13 +163,30 @@ class UserController {
     // form
     const { password, password_conf } = req.body
     // we need the link data and tokens using params
-    const { id, token } = req.params
-    console.log(id, token)
-    const user = await UserModel.findById(id)
-    const new_secret = user._id + process.env.SECRET_KEY
     try {
-      jwt.verify(token, new_secret)
-    } catch (e) {}
+      const { id, token } = req.params
+      const user = await UserModel.findById(id)
+      const new_secret = user._id + process.env.SECRET_KEY
+
+      const user_id = await jwt.verify(token, new_secret)
+      if (!password || !password_conf) {
+        throw new Error("All fields are required")
+      } else if (password !== password_conf) {
+        throw new Error("Password doesn't match")
+      } else {
+        const newHashedPassword = await bcrypt.hash(password, 12)
+
+        await UserModel.findByIdAndUpdate(user._id, {
+          password: newHashedPassword,
+        })
+        res.status(202).send({
+          status: "success",
+          msg: "Password reset successfully!",
+        })
+      }
+    } catch (e) {
+      res.status(400).send({ status: "failed", msg: e.message })
+    }
   }
   // passwordRest End
 }
